@@ -28,7 +28,8 @@ jobs:
 
       - name: Show compile errors
         if: failure()
-        run: grep -E "error:|warning: unreachable" build.log | sort -u | head -60 || true
+        run: |
+          grep -E "error:" build.log | sort -u | head -60 || true
 
       - name: Package IPA
         run: |

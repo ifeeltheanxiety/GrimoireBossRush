@@ -1,0 +1,48 @@
+name: Build iOS (unsigned IPA)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project GrimoireBossRush.xcodeproj \
+            -target GrimoireBossRush \
+            -configuration Release \
+            -sdk iphoneos \
+            SYMROOT="$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log
+
+      - name: Show compile errors
+        if: failure()
+        run: grep -E "error:|warning: unreachable" build.log | sort -u | head -60 || true
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Release-iphoneos/GrimoireBossRush.app Payload/
+          zip -qry GrimoireBossRush.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrimoireBossRush-ipa
+          path: GrimoireBossRush.ipa
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log
+          path: build.log

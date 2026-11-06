@@ -1,0 +1,7 @@
+build/
+DerivedData/
+*.ipa
+Payload/
+xcuserdata/
+.DS_Store
+__pycache__/
